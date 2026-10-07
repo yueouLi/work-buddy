@@ -1,0 +1,16 @@
+# Abhaengigkeiten, werden per npm install nachgebaut.
+node_modules/
+
+# Laufzeitdaten: Ereignis-Log, Bewertungen, Handzuordnungen, Confluence-Baum, gescannte
+# Pfade. Das ist Leonies tatsaechliche Aktivitaet (Mailbetreffs, Dateinamen, Confluence-
+# Seitentitel) - gehoert nicht in ein Repo, egal wie die Sichtbarkeit steht.
+# data/projects.json (die Zuordnungsregeln) ist bewusst mit ausgeschlossen, nicht nur
+# die Laufzeitdaten: Nachteil ist, dass die Regeln nicht versioniert sind. Wer sie
+# mitversionieren will, entfernt die Zeile unten gezielt.
+data/
+
+# Alte Handsicherungen. Git ist ab jetzt die Versionsgeschichte, die Kopien bleiben nur
+# lokal liegen (siehe feedback_no_delete - nicht loeschen, nur nicht einchecken).
+*.BACKUP-*
+# macOS metadata
+.DS_Store

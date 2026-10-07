@@ -1,0 +1,1706 @@
+:root {
+  --bg: #F0F4FA;
+  --bg-card: #FFFFFF;
+  --text: #1A2740;
+  --text-secondary: #4A6080;
+  --text-muted: #8AA0BE;
+  --border: #C8D8EC;
+  --border-light: #E0EAF5;
+  --accent: #003781;
+  --accent-light: #E6EDF8;
+  --shadow: 0 1px 3px rgba(0, 55, 129, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 55, 129, 0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --obsidian-color: #9F7AEA;
+  --confluence-color: #003781;
+  --github-color: #2D3748;
+  --teams-color: #5B8DEF;
+  /* Outlook uebernimmt den Platz von Teams als Kommunikationsquelle, deshalb dieselbe
+     Farbfamilie — aber dunkler, damit die alten Teams-Zeilen im Log unterscheidbar
+     bleiben. Beides Blau waere sonst dieselbe Zeile mit zwei Namen. */
+  --outlook-color: #0F6CBD;
+  /* Gruen, weil es die einzige Farbfamilie ist, die weder eine andere Quelle
+     (Lila, Blau, Dunkelgrau) noch ein Projekt (Petrol, Orange, Violett, Ocker) belegt. */
+  --html-color: #2F855A;
+  /* Magenta fuer die Arbeitsordner: die letzte freie Familie. Blau und Lila sind an drei
+     Quellen vergeben, Gruen an HTML, Rot heisst in diesem Panel Fehler, Ocker heisst
+     fluechtig. Eine sechste Blauschattierung waere im Verlauf nicht zu unterscheiden. */
+  --arbeit-color: #8C2F6E;
+  /* Warnfarbe fuer Dateien an Wegwerf-Orten. Rot waere Fehler — hier ist nichts kaputt,
+     es liegt nur falsch. */
+  --fluechtig-color: #B7791F;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+/* ── Grundraster: Projektschiene links, Panel rechts ── */
+.app {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  align-items: start;
+}
+
+.container {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Die Schiene bleibt beim Scrollen stehen — der Verlauf ist lang, der Filter muss
+   erreichbar bleiben, ohne nach oben zu scrollen. */
+.rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 8px 10px;
+}
+
+.rail-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.rail-reset {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.rail-reset:hover {
+  text-decoration: underline;
+}
+
+.rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.rail-item:hover {
+  background: var(--accent-light);
+}
+
+.rail-item.active {
+  background: var(--accent-light);
+  border-left-color: var(--proj);
+}
+
+/* Projekt ohne Aktivität im Zeitraum: sichtbar bleiben, aber nicht um Aufmerksamkeit
+   konkurrieren. Ausblenden waere schlechter — dann sieht man nicht, dass es still ist. */
+.rail-item.empty {
+  opacity: 0.45;
+}
+
+.ri-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--proj);
+}
+
+.ri-label {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ri-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ri-sub {
+  grid-column: 2 / 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Wer den Auftrag gegeben hat. Steht unter dem Projektnamen, nicht daneben — der
+   Projektname ist die Ueberschrift, die Person die Herkunft. */
+.ri-person {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--proj);
+  border: 1px solid var(--proj);
+  border-radius: 999px;
+  padding: 0 6px;
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.ri-last {
+  font-size: 9px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-foot {
+  margin-top: auto;
+  padding: 14px 8px 0;
+  border-top: 1px solid var(--border-light);
+  font-size: 9px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.rail-foot code {
+  font-size: 9px;
+  color: var(--text-secondary);
+}
+
+.foot-link {
+  border: none;
+  background: transparent;
+  padding: 4px 0 0;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.foot-link:hover {
+  text-decoration: underline;
+}
+
+.rail-foot.err {
+  color: #C5221F;
+}
+
+/* ── Löschkorb in der Schiene ──
+   Rot gerahmt und abgesetzt: die Zone soll nicht wie ein weiteres Projekt aussehen, sonst
+   landet dort etwas beim Sortieren. */
+.rail-trash {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 8px;
+  border: 1.5px dashed rgba(197, 34, 31, 0.4);
+  border-radius: var(--radius-sm);
+  color: #C5221F;
+  cursor: pointer;
+}
+
+.rail-trash:hover {
+  background: rgba(197, 34, 31, 0.05);
+}
+
+.rail-trash.has {
+  border-style: solid;
+  background: rgba(197, 34, 31, 0.05);
+}
+
+.rail-trash.drop {
+  background: #C5221F;
+  border-color: #C5221F;
+  color: #fff;
+}
+
+.rt-icon {
+  font-size: 13px;
+  text-align: center;
+}
+
+.rt-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rt-count {
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.ghost-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Der einzige Knopf im Panel, der etwas Unumkehrbares anstoesst — er soll aussehen wie
+   etwas, das man nicht im Vorbeigehen trifft. */
+.danger-btn {
+  border: 1px solid #C5221F;
+  background: #C5221F;
+  color: #fff;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.danger-btn:hover {
+  background: #A01A17;
+  border-color: #A01A17;
+}
+
+.danger-btn:disabled {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.bin-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bin-foot button {
+  margin-left: auto;
+}
+
+.ghost-btn:disabled:hover {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background: var(--bg-card);
+}
+
+/* ── Header ── */
+.header-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.header-title .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.header-title h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.header-title h1 span {
+  color: var(--accent);
+}
+
+.header-stats {
+  display: flex;
+  gap: 28px;
+  margin-left: auto;
+}
+
+.hstat .hl {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.hstat .hv {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.ghost-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.ghost-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* ── Quellen-Kacheln ── */
+/* auto-fit statt fester Spaltenzahl: die Kacheln kommen aus SOURCES im renderer, eine
+   neue Quelle soll das Raster nicht sprengen. 150px ist die Breite, bei der die
+   Zahl noch neben Name und Status Platz hat. */
+.source-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.source-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--src);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+}
+
+.source-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.source-card.off {
+  opacity: 0.4;
+}
+
+.source-card.pending {
+  border-style: dashed;
+  cursor: default;
+}
+
+.source-card.pending:hover {
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+/* Stillgelegte Quelle: die Zahl gilt noch, sie waechst nur nicht mehr. Blass statt
+   gestrichelt — gestrichelt heisst in dieser Reihe "noch nicht da". */
+.source-card.still {
+  opacity: 0.6;
+}
+
+.source-card.still:hover {
+  opacity: 1;
+}
+
+.sc-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--src);
+  flex: 0 0 auto;
+}
+
+.sc-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sc-tag {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+/* Live-Kollektor: pulsierender gruener Punkt. Der Zustand muss ohne Hover lesbar sein. */
+.sc-tag.live {
+  color: #1E8E3E;
+  border-color: rgba(30, 142, 62, 0.4);
+  background: rgba(30, 142, 62, 0.08);
+}
+
+.sc-tag.live::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1E8E3E;
+  margin-right: 4px;
+  vertical-align: 1px;
+  animation: scPulse 2s ease-in-out infinite;
+}
+
+@keyframes scPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.sc-tag.poll {
+  color: var(--confluence-color);
+  border-color: rgba(0, 55, 129, 0.3);
+  background: rgba(0, 55, 129, 0.06);
+}
+
+.sc-tag.err {
+  color: #C5221F;
+  border-color: rgba(197, 34, 31, 0.4);
+  background: rgba(197, 34, 31, 0.08);
+}
+
+.source-card.broken {
+  border-left-color: #C5221F;
+}
+
+/* Vault-Datei, die kurz nach einem Teams-Copy geschrieben wurde. */
+.fr-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--teams-color);
+  border: 1px solid rgba(91, 141, 239, 0.45);
+  background: rgba(91, 141, 239, 0.1);
+  border-radius: 999px;
+  padding: 1px 6px;
+  vertical-align: 1px;
+}
+
+/* Ungelesene Mail. Gleiche Pille, Outlook-Farbe — damit nicht "aus Teams" und "ungelesen"
+   gleich aussehen, obwohl das eine eine Herkunft und das andere ein offener Posten ist. */
+.fr-tag.ungelesen {
+  color: var(--outlook-color);
+  border-color: rgba(15, 108, 189, 0.45);
+  background: rgba(15, 108, 189, 0.1);
+}
+
+/* HTML-Artefakt an einem Wegwerf-Ort (C:\tmp, Downloads). Gleiche Pillenform wie
+   .fr-tag, andere Farbe — die Form heisst "Zusatzinfo", die Farbe sagt, welcher Art. */
+.fr-temp {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--fluechtig-color);
+  border: 1px solid rgba(183, 121, 31, 0.5);
+  background: rgba(183, 121, 31, 0.12);
+  border-radius: 999px;
+  padding: 1px 6px;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.sc-count {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--src);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+
+.sc-last {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Controls ── */
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: var(--shadow);
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--accent);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tabs-spacer {
+  flex: 1;
+}
+
+.search-input {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--text);
+  width: 260px;
+  font-family: inherit;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #48BB78;
+  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
+}
+
+/* ── Panels ── */
+.panels-row {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 16px;
+}
+
+.panel,
+.feed-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.panel-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  /* Sonst bricht "Arbeit & Bestand" im engen Kopf auf zwei Zeilen und zieht die ganze
+     Kopfzeile in die Hoehe. */
+  white-space: nowrap;
+}
+
+.panel-sub,
+.feed-note {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.panel-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+/* Balken pro Tag */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 168px;
+}
+
+.bar-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-stack {
+  width: 100%;
+  max-width: 42px;
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  transition: opacity 0.12s;
+}
+
+.bar-col:hover .bar-stack {
+  opacity: 0.75;
+}
+
+.bar-seg {
+  width: 100%;
+  background: var(--seg);
+  min-height: 2px;
+}
+
+.bar-val {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Stundenraster */
+.hour-chart {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+}
+
+.hour-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Feed ── */
+.feed-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.feed-note {
+  margin-left: auto;
+}
+
+/* 460px waren richtig, solange die Liste nur der Verlauf unter zwei Diagrammen war. Jetzt ist
+   sie auch der Bestand — und ein Bestand, von dem man sechs Zeilen sieht, ist kein Bestand.
+   72vh statt einer festen Zahl, damit ein grosser Bildschirm auch mehr zeigt. */
+.feed {
+  display: flex;
+  flex-direction: column;
+  max-height: 72vh;
+  min-height: 240px;
+  overflow-y: auto;
+}
+
+.feed-day {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 12px 2px 6px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 1;
+}
+
+/* Eine Zeile fuer Verlauf und Bestand. Bis 2026-08-20 war das ein Flex-Layout, weil eine
+   Zeile nur eine Zeile war. Jetzt kann darunter eine Notiz oder ein Vorschaurahmen
+   aufklappen — beides muss ueber die ganze Breite gehen, und dafuer braucht es ein Grid mit
+   benannten Spalten. Feste Breiten fuer Zeit und Sterne, damit die Titel untereinander
+   stehen: eine Liste, in der jede Zeile anders einrueckt, liest sich nicht als Liste.
+   Die Sternspalte bleibt auch bei einer Batch-Zeile ohne Sterne stehen. */
+.feed-row {
+  display: grid;
+  grid-template-columns: 40px 8px auto 72px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--src);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.feed-row:hover {
+  background: var(--accent-light);
+}
+
+.fr-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-src {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: var(--src);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.fr-main {
+  min-width: 0;
+}
+
+.fr-title {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Zwei Zeilen statt einer: seit die eigene Notiz hier mitlaeuft, ist die Detailzeile
+   laenger als eine Zeile breit. Abschneiden nach zwei Zeilen statt nach einer — sonst
+   sieht man von einer 200 Zeichen langen Notiz die ersten fuenf Woerter. */
+.fr-detail {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fr-ordner {
+  color: var(--text-muted);
+}
+
+.fr-desc {
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+/* Eigene Notiz statt Titel aus dem Dokument: erkennbar, weil sie mehr wert ist als eine
+   maschinell gelesene <title>-Zeile. */
+.fr-desc.eigen {
+  color: var(--text);
+  border-left: 2px solid var(--fluechtig-color);
+  padding-left: 6px;
+}
+
+.feed-row.batch {
+  background: repeating-linear-gradient(135deg, transparent 0 8px, rgba(0, 55, 129, 0.03) 8px 16px);
+  cursor: default;
+}
+
+.feed-row.batch:hover {
+  background: repeating-linear-gradient(135deg, transparent 0 8px, rgba(0, 55, 129, 0.03) 8px 16px);
+}
+
+.fr-action {
+  font-size: 10px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+}
+
+.empty {
+  padding: 40px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Ansichten: Aktivität vs. Kontext-Mappe ── */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.view[hidden] {
+  display: none;
+}
+
+.view-tabs {
+  align-self: flex-start;
+}
+
+/* ── Dropzone ── */
+.dropzone {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  background: rgba(0, 55, 129, 0.02);
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.dropzone.hot {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.dropzone.off {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.dz-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.dz-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input.wide {
+  flex: 1;
+  width: auto;
+}
+
+/* ── Mappen-Einträge ── */
+.mappe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.mp-item {
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--proj);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Noch kein Zweck hinterlegt: das ist die Arbeitsliste, die durchgefragt wird. */
+.mp-item.open {
+  background: rgba(197, 34, 31, 0.03);
+  border-color: rgba(197, 34, 31, 0.25);
+}
+
+.mp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-kind {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  background: var(--border-light);
+  border-radius: 999px;
+  padding: 2px 8px;
+  flex: 0 0 auto;
+}
+
+.mp-title {
+  font-size: 12px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mp-title:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.mp-sel {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 3px 6px;
+  flex: 0 0 auto;
+}
+
+.mp-del {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.mp-del:hover {
+  color: #C5221F;
+}
+
+.mp-zweck {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.mp-zweck:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.mp-ref {
+  font-size: 9px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-note.warn {
+  color: #C5221F;
+  font-weight: 700;
+}
+
+/* Umschalter im Verlaufskopf: kleiner als die Zeitraum-Tabs, damit die Hierarchie stimmt. */
+.tabs.small {
+  margin-left: 10px;
+  padding: 3px;
+  box-shadow: none;
+}
+
+.tabs.small .tab {
+  padding: 3px 10px;
+  font-size: 10px;
+}
+
+/* Projekt-Punkt in der Verlaufszeile. Der linke Streifen bleibt die Quelle — sonst
+   sind zwei Farbcodes an derselben Kante nicht auseinanderzuhalten. */
+.fr-proj {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--proj);
+  flex: 0 0 auto;
+}
+
+/* ── Handzuordnung ── */
+.feed-row {
+  cursor: grab;
+}
+
+.feed-row.dragging {
+  opacity: 0.4;
+}
+
+/* Aktives Ablegeziel in der Schiene. Kraeftiger als der Hover-Zustand, sonst ist beim
+   Ziehen nicht sicher zu sehen, wo der Drop landet. */
+.rail-item.drop {
+  background: var(--proj);
+  color: #fff;
+  box-shadow: inset 0 0 0 2px var(--proj);
+}
+
+.rail-item.drop .ri-count,
+.rail-item.drop .ri-last,
+.rail-item.drop .ri-person {
+  color: #fff;
+  border-color: #fff;
+}
+
+.rail-item.drop .ri-dot {
+  background: #fff;
+}
+
+/* Zeile, die nicht die Regel, sondern eine Entscheidung einsortiert hat. */
+.fr-fix {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--proj);
+  border: 1px solid var(--proj);
+  border-radius: 999px;
+  padding: 0 5px;
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+/* Steht als erstes in der Detailzeile — dort wird der Titel nicht abgeschnitten. */
+.fr-detail .fr-fix:first-child,
+.fr-detail .fr-geraten:first-child {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+.fr-fix:hover {
+  background: var(--proj);
+  color: #fff;
+}
+
+/* Geratene Zuordnung. Bewusst nicht in der Projektfarbe: der Farbstreifen behauptet ein
+   Projekt, dieses Zeichen sagt "nur vermutet". Beides in derselben Farbe wuerde die
+   Vermutung wieder zur Aussage machen. Gelb statt rot, weil es kein Fehler ist — es kann
+   stimmen, es ist nur nicht belegt. */
+.fr-geraten {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #8A6100;
+  background: #FFF4D6;
+  border: 1px solid #E8B93B;
+  border-radius: 999px;
+  min-width: 14px;
+  text-align: center;
+  padding: 0 4px;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.rail-foot .fr-geraten {
+  margin-left: 0;
+  vertical-align: 0;
+}
+
+/* Infra: die Zuordnung ist sicher (kein Fragezeichen-Gelb), es ist nur wiederverwendbares
+   Material statt der eigentlichen Projektlieferung. Neutrales Grau, damit es weder als
+   Fehler noch als Warnung gelesen wird. */
+.fr-infra {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #5B6472;
+  background: #EEF1F5;
+  border: 1px solid #C7CDD6;
+  border-radius: 999px;
+  padding: 0 5px;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.fr-detail .fr-infra:first-child {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+.foot-ok {
+  color: #1E8E3E;
+  font-weight: 700;
+}
+
+/* Gruppierung nach Datei: eine Zeile pro Datei, Anzahl der Bearbeitungen rechts. */
+.fr-times {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 999px;
+  padding: 1px 7px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1180px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  /* Schmales Fenster: Schiene wird zur waagerechten Leiste oben, sonst frisst sie
+     die halbe Breite. */
+  .rail {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+
+  .rail-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .rail-item {
+    grid-template-columns: 10px auto auto;
+    border-left: none;
+    border: 1px solid var(--border-light);
+  }
+
+  .rail-item.active {
+    border-color: var(--proj);
+  }
+
+  .ri-last,
+  .rail-foot {
+    display: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .source-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panels-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ── Bibliothek ──
+   Die alte html-overview.html war dunkelblau mit Violett-Verlauf. Hier gilt das Panel-Bild:
+   weisse Karte, Allianz-Blau als Akzent. Zwei Farbwelten fuer dieselbe Sache waeren
+   Verwirrung, nicht Wiedererkennung. */
+/* ── Schubladen als Leiste, nicht als Wand ──
+   Erster Versuch: alle Kategorien untereinander offen — damals 55, weil die Ablage noch alle
+   fuenf Quellen aufgenommen hat. Ergebnis war eine Karte mit acht Zeilen Chips und der Liste
+   unter dem Bildrand: eine Ansicht zum Wiederfinden, die nichts zum Finden zeigt. Seit die
+   Ablage nur noch HTML enthaelt, sind es deutlich weniger; die Deckelung auf zwei Zeilen
+   bleibt trotzdem, damit ein neuer Ordner die Liste nie wieder wegdrueckt. Wer alle
+   Schubladen sehen will, klappt sie mit dem Knopf im Kopf auf. */
+.lib-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 10px;
+  max-height: 68px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.lib-cats.auf {
+  max-height: 40vh;
+}
+
+.lib-cats:empty {
+  display: none;
+}
+
+/* Das hidden-Attribut muss die display-Regeln oben schlagen. Ohne diese Zeile bleiben die
+   Ablage-Schalter im Verlauf sichtbar, weil .lib-cats { display:flex } spezifischer ist als
+   das display:none des Browsers fuer [hidden]. */
+[hidden] {
+  display: none !important;
+}
+
+.lib-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 4px 6px 4px 11px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.lib-chip:hover {
+  border-color: var(--html-color);
+  color: var(--html-color);
+}
+
+.lib-chip.on {
+  border-color: var(--html-color);
+  background: var(--html-color);
+  color: #fff;
+  font-weight: 700;
+}
+
+.lc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.lc-count {
+  background: var(--accent-light);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 9.5px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.lib-chip.on .lc-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* ── Bewertung, Knoepfe, Notiz, Vorschau ──
+   Das waren bis 2026-08-20 die .lb-*-Regeln der eigenen Bibliothekszeile. Es gibt keine
+   eigene Zeile mehr, also auch keine eigenen Regeln: dieselben Sterne, dieselben Knoepfe
+   in derselben .feed-row. Eine Datei hatte im Verlauf keine Sterne und in der Bibliothek
+   fuenf — genau daran hat sich der Bruch gezeigt. */
+.fr-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.fr-star {
+  border: 0;
+  background: none;
+  padding: 0 1px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--border);
+  cursor: pointer;
+}
+
+.fr-star:hover,
+.fr-star.on {
+  color: var(--fluechtig-color);
+}
+
+.fr-acts {
+  display: flex;
+  gap: 3px;
+}
+
+.fr-btn {
+  border: 1px solid transparent;
+  background: none;
+  border-radius: var(--radius-sm);
+  width: 26px;
+  height: 24px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.fr-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-card);
+  color: var(--accent);
+}
+
+.fr-btn.on {
+  color: var(--fluechtig-color);
+  border-color: var(--fluechtig-color);
+}
+
+.fr-btn.weg:hover {
+  border-color: #C5221F;
+  color: #C5221F;
+}
+
+/* Notiz und Vorschau klappen unter der Zeile auf und gehen ueber alle Spalten. Deshalb
+   ist .feed-row ein Grid und kein Flex-Container. */
+.fr-note {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text);
+  resize: vertical;
+  background: var(--bg-card);
+}
+
+.fr-note:focus {
+  outline: 0;
+  border-color: var(--accent);
+}
+
+/* Vorschau. 420px sind gross genug, um ein Deck oder einen Bericht zu erkennen, und klein
+   genug, dass drei offene Rahmen noch scrollbar bleiben. */
+.fr-frame-box {
+  grid-column: 1 / -1;
+  display: none;
+}
+
+.fr-frame-box.show {
+  display: block;
+  margin-top: 8px;
+}
+
+.fr-frame {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+/* Zweite Bedienzeile in der Karte: schmaler als die Zeitraumleiste, damit die Hierarchie
+   stimmt — Zeitraum ist die Hauptachse, Bewertungsfilter der Nebenschalter. */
+.controls-row.thin {
+  padding: 0 14px 8px;
+  margin: 0;
+}
+
+/* Sagt, was die Liste gerade verschweigt: gekappte Zeilen, ein Zeitraum, der nur im
+   Verlauf gilt, eine Vorschaugrenze. Lieber als Text hinschreiben als still filtern. */
+.feed-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+  max-width: 60%;
+}
+
+/* Kein eigenes Layout fuer schmale Fenster. Die Schiene klappt bei 1180px schon nach oben,
+   danach hat die Zeile die volle Breite: rund 450px gehen an Zeit, Sterne und Knoepfe, der
+   Rest an den Titel. Erst deutlich unter 800px wuerde es eng — und dort ist die richtige
+   Antwort, das Fenster zu vergroessern, nicht die Knoepfe zu verstecken. */
+
+/* ── Mail-Assistent ── */
+.mailassist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "context draft" "intent draft";
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.mailassist-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mailassist-field:nth-child(1) { grid-area: context; }
+.mailassist-field:nth-child(2) { grid-area: draft; }
+.mailassist-field:nth-child(3) { grid-area: intent; }
+
+.mailassist-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mailassist-field textarea {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  resize: vertical;
+}
+
+.mailassist-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.mailassist-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ma-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.ma-primary:hover {
+  background: var(--accent);
+  color: #fff;
+  opacity: 0.9;
+}
+
+.ma-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mailassist-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.mailassist-result {
+  border-top: 1px solid var(--border-light);
+  padding-top: 16px;
+}
+
+.mailassist-final-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.mailassist-final-text {
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+}
+
+.mailassist-corrections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ma-corr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+
+.ma-corr-tag {
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ma-corr-wrong {
+  color: #C53030;
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.ma-corr-arrow {
+  color: var(--text-muted);
+}
+
+.ma-corr-right {
+  color: #2F855A;
+  font-weight: 600;
+}
+
+.ma-corr-note {
+  color: var(--text-muted);
+  flex: 1 0 100%;
+}
+
+.ma-corr-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Prioritäten ──
+   Karten zum Ziehen. Die Farbe hängt an der Einstufung, nicht am Projekt: sie sagt, wie
+   sehr sich der Termin bewegen lässt. */
+.td-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.td-card {
+  --c: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-left: 6px solid var(--c);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px 12px 10px;
+  display: grid;
+  grid-template-columns: 28px 34px 1fr;
+  gap: 6px 8px;
+  align-items: start;
+}
+
+.td-card.dragging { opacity: 0.4; }
+.td-card.over-top { box-shadow: 0 -3px 0 0 var(--accent); }
+.td-card.over-bottom { box-shadow: 0 3px 0 0 var(--accent); }
+.td-card.all-done { background: #F1F4F1; }
+.td-card.all-done .td-title { text-decoration: line-through; color: var(--text-muted); }
+
+.td-grip {
+  cursor: grab;
+  user-select: none;
+  font-size: 20px;
+  line-height: 28px;
+  text-align: center;
+  color: var(--text-muted);
+  border-radius: 4px;
+}
+
+.td-grip:hover { background: var(--accent-light); color: var(--accent); }
+.td-grip:active { cursor: grabbing; }
+
+.td-rank {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.td-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+}
+
+.td-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+
+.td-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #fff;
+  background: var(--c);
+  white-space: nowrap;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.td-badge:hover { filter: brightness(0.92); }
+.td-count { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+.td-when { font-size: 12px; color: var(--text-secondary); }
+.td-why { margin: 3px 0 0; font-size: 12px; color: var(--text-muted); }
+.td-body { grid-column: 3; }
+
+.td-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  grid-column: 3;
+}
+
+.td-tasks label {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.td-tasks input:checked + span { text-decoration: line-through; color: var(--text-muted); }
+
+.td-tasks input { accent-color: var(--accent); }

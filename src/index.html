@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Buddy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="app">
+
+    <aside class="rail">
+      <div class="rail-head">
+        <span class="rail-title">Projekte</span>
+        <button class="rail-reset" id="projectReset" type="button" hidden>zurücksetzen</button>
+      </div>
+      <div class="rail-list" id="projectRail"></div>
+
+      <!-- Zone fuer das, was weg soll. Nimmt dieselben Zeilen wie die Projekte, landet
+           aber in der Loeschliste statt in einer Zuordnung. -->
+      <div class="rail-trash" id="trashZone" title="Zeilen hierher ziehen, die weg sollen">
+        <span class="rt-icon">⌫</span>
+        <span class="rt-label">Löschkorb</span>
+        <span class="rt-count" id="trashCount">0</span>
+      </div>
+
+      <div class="rail-foot" id="projectFoot"></div>
+    </aside>
+
+    <div class="container">
+
+    <div class="header-block">
+      <div class="header-title">
+        <div class="sub">Alle Plattformen · ein Panel</div>
+        <h1>Work <span>Buddy</span></h1>
+      </div>
+      <div class="header-stats">
+        <div class="hstat">
+          <div class="hl">Heute</div>
+          <div class="hv" id="hToday">--</div>
+        </div>
+        <div class="hstat">
+          <div class="hl">Streak</div>
+          <div class="hv" id="hStreak">--</div>
+        </div>
+        <div class="hstat">
+          <div class="hl">Peak gesamt</div>
+          <div class="hv" id="hPeak">--</div>
+        </div>
+        <div class="hstat">
+          <div class="hl">Gesamt</div>
+          <div class="hv" id="hTotal">--</div>
+        </div>
+      </div>
+      <button class="ghost-btn" id="reloadBtn" type="button">Neu laden</button>
+    </div>
+
+    <div class="source-row" id="sourceRow"></div>
+
+    <div class="tabs view-tabs" id="viewTabs">
+      <button class="tab active" data-view="activity">Arbeit</button>
+      <button class="tab" data-view="todo">Prioritäten <span id="viewTodoCount"></span></button>
+      <button class="tab" data-view="mappe">Kontext-Mappe <span id="viewMappeCount"></span></button>
+      <button class="tab" data-view="trash">Löschkorb <span id="viewTrashCount"></span></button>
+      <button class="tab" data-view="mailassist">Mail-Assistent</button>
+    </div>
+
+    <div class="view" id="viewActivity">
+
+    <div class="controls-row">
+      <div class="tabs" id="rangeTabs">
+        <button class="tab" data-range="today">Heute</button>
+        <button class="tab" data-range="3days">3 Tage</button>
+        <button class="tab active" data-range="week">Woche</button>
+        <button class="tab" data-range="month">Monat</button>
+        <button class="tab" data-range="all">Alles</button>
+      </div>
+      <div class="tabs-spacer"></div>
+      <input class="search-input" id="searchInput" type="search"
+        placeholder="Suchen — Titel, Ordner, Pfad, eigene Notiz…" autocomplete="off">
+      <span class="live-dot" id="liveDot" title="Datei-Watcher aktiv"></span>
+    </div>
+
+    <div class="panels-row">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Aktivität pro Tag</span>
+          <span class="panel-sub" id="trendSub"></span>
+        </div>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Tagesrhythmus</span>
+          <span class="panel-sub" id="clockSub"></span>
+        </div>
+        <div class="hour-chart" id="hourChart"></div>
+      </div>
+    </div>
+
+    <!-- Eine Liste, drei Gruppierungen. „nach Zeit" beantwortet was ist passiert, über alle
+         fünf Quellen. Die beiden HTML-Modi beantworten die andere Frage: wo liegt das HTML,
+         das ich jetzt brauche. Absichtlich kein zweiter Reiter — dieselben Zeilen, dieselben
+         Sterne, nur anders sortiert. Und absichtlich nur HTML: Notizen findet Obsidian, Seiten
+         findet Confluence, verstreute HTML-Artefakte findet sonst niemand. -->
+    <div class="feed-card">
+      <div class="feed-header">
+        <span class="panel-title" id="feedTitle">Arbeit</span>
+        <span class="panel-badge" id="feedCount"></span>
+        <div class="feed-note" id="feedNote"></div>
+        <button class="ghost-btn" id="libCatsToggle" type="button" hidden>Schubladen</button>
+        <button class="ghost-btn" id="libPreviewAll" type="button" hidden>Alle Vorschauen</button>
+        <button class="ghost-btn" id="libRescan" type="button" hidden>Neu einlesen</button>
+        <div class="tabs small" id="groupTabs">
+          <button class="tab active" data-group="zeit">nach Zeit</button>
+          <button class="tab" data-group="kategorie">HTML nach Ordner</button>
+          <button class="tab" data-group="stern">HTML nach Stern</button>
+        </div>
+      </div>
+
+      <div class="controls-row thin">
+        <div class="tabs small" id="libFilters" hidden>
+          <button class="tab active" data-lib="alle">Alles</button>
+          <button class="tab" data-lib="bewertet">Bewertet</button>
+          <button class="tab" data-lib="unbewertet">Unbewertet</button>
+          <button class="tab" data-lib="fluechtig">Flüchtig</button>
+        </div>
+        <div class="tabs-spacer"></div>
+        <span class="feed-hint" id="feedHint"></span>
+      </div>
+
+      <div class="lib-cats" id="libCats" hidden></div>
+      <div class="feed" id="feed"></div>
+    </div>
+
+    </div><!-- /view Arbeit -->
+
+    <div class="view" id="viewTodo" hidden>
+      <div class="feed-card">
+        <div class="feed-header">
+          <span class="panel-title">Prioritäten</span>
+          <span class="panel-badge" id="todoBadge"></span>
+          <div class="feed-note" id="todoNote">Karten am Griff ⋮⋮ ziehen · Haken landet in der Projektnotiz in Vault 2 · Klick auf die Einstufung wechselt sie</div>
+          <button class="ghost-btn" id="todoCopy" type="button">Als Markdown kopieren</button>
+        </div>
+        <ol class="td-list" id="todoList"></ol>
+      </div>
+    </div>
+
+    <div class="view" id="viewMappe" hidden>
+      <div class="feed-card">
+        <div class="feed-header">
+          <span class="panel-title">Kontext-Mappe</span>
+          <span class="panel-badge" id="mappeCount"></span>
+          <div class="feed-note" id="mappeNote"></div>
+          <button class="ghost-btn" id="mappeClaude" type="button"
+            title="Schreibt die ganze Mappe nach data/auftrag.md und legt den Einfüge-Satz in die Ablage. Das Panel führt nichts aus.">An Claude übergeben</button>
+          <button class="ghost-btn" id="mappeExport" type="button">In Vault exportieren</button>
+        </div>
+
+        <div class="dropzone" id="mappeDrop">
+          <div class="dz-hint">Dateien oder ganze Ordner hierher ziehen</div>
+          <div class="dz-row">
+            <input class="search-input wide" id="mappeUrl" type="text"
+              placeholder="Confluence-, Jira- oder GitHub-Link einfügen…" autocomplete="off">
+            <button class="ghost-btn" id="mappeUrlAdd" type="button">Hinzufügen</button>
+            <button class="ghost-btn" id="mappeTakeAuto" type="button"
+              title="Alle Einträge aus dem gefilterten Verlauf in die Mappe übernehmen">Kandidaten übernehmen</button>
+          </div>
+        </div>
+
+        <div class="mappe-list" id="mappeList"></div>
+      </div>
+    </div>
+
+    <div class="view" id="viewTrash" hidden>
+      <div class="feed-card">
+        <div class="feed-header">
+          <span class="panel-title">Löschkorb</span>
+          <span class="panel-badge" id="trashBadge"></span>
+          <div class="feed-note" id="trashNote"></div>
+          <button class="ghost-btn" id="trashClean" type="button">Erstmal in Vault-Papierkorb</button>
+          <button class="danger-btn" id="trashRecycle" type="button">Endgültig löschen</button>
+        </div>
+
+        <div class="dropzone" id="trashDrop">
+          <div class="dz-hint">Zeilen aus dem Verlauf auf „Löschkorb" links ziehen — oder hierher.</div>
+        </div>
+
+        <div class="mappe-list" id="trashList"></div>
+
+        <div class="bin-foot">
+          <span id="binNote"></span>
+          <button class="ghost-btn" id="binEmpty" type="button">Vault-Papierkorb leeren</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="viewMailAssist" hidden>
+      <div class="feed-card">
+        <div class="feed-header">
+          <span class="panel-title">Mail-Assistent</span>
+          <div class="feed-note">Korrekturen fließen automatisch ins Fehlertagebuch</div>
+        </div>
+
+        <div class="mailassist-grid">
+          <label class="mailassist-field">
+            <span class="mailassist-label">Kontext / Hintergrund</span>
+            <textarea id="maContext" rows="4" placeholder="Worum geht's? Wer bekommt die Nachricht, was ist die Situation?"></textarea>
+          </label>
+          <label class="mailassist-field">
+            <span class="mailassist-label">Dein deutscher Entwurf</span>
+            <textarea id="maDraft" rows="6" placeholder="Dein Text auf Deutsch, auch wenn er noch holprig ist…"></textarea>
+          </label>
+          <label class="mailassist-field">
+            <span class="mailassist-label">Was du eigentlich meinst (auch Chinesisch möglich)</span>
+            <textarea id="maIntent" rows="4" placeholder="Falls du einen Teil auf Deutsch nicht ausdrücken konntest — hier frei, auch auf Chinesisch."></textarea>
+          </label>
+        </div>
+
+        <div class="mailassist-actions">
+          <button class="ghost-btn ma-primary" id="maGenerate" type="button">Antwort generieren</button>
+          <span class="mailassist-status" id="maStatus"></span>
+        </div>
+
+        <div class="mailassist-result" id="maResult" hidden>
+          <div class="mailassist-final">
+            <div class="mailassist-final-head">
+              <span class="mailassist-label">Finale Version</span>
+              <button class="ghost-btn" id="maCopy" type="button">Kopieren</button>
+            </div>
+            <div class="mailassist-final-text" id="maFinalText"></div>
+          </div>
+          <div class="mailassist-corrections" id="maCorrections"></div>
+        </div>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+
+</html>

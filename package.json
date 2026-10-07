@@ -1,0 +1,16 @@
+{
+  "name": "work-buddy",
+  "version": "0.1.0",
+  "description": "Work Buddy — ein Panel fuer alle Plattform-Aktivitaeten: Obsidian, Confluence, GitHub, Teams.",
+  "main": "src/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "seed": "python seed.py"
+  },
+  "author": "Allianz GenAI Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^41.0.2"
+  }
+}
